@@ -35,7 +35,11 @@ class CustomPresentationController: UIPresentationController {
     
     var longFormYPosition: CGFloat = 265
     
-    private var anchoredYPosition: CGFloat = 65.0
+    private var anchoredYPosition: CGFloat = 0.0
+    
+    private var prevYPos: CGFloat = 0.0
+    
+    private var halfOpen: Bool = true
     
     @objc
     func dismissPresentedView(_ sender: UITapGestureRecognizer) {
@@ -90,8 +94,11 @@ class CustomPresentationController: UIPresentationController {
         presentedView.layer.rasterizationScale = UIScreen.main.scale
         
         // update height or y position of presentedView
-        let adjustedSize = CGSize(width: containerView.frame.size.width, height: containerView.frame.size.height - longFormYPosition)
-        presentedView.frame.origin.y = longFormYPosition
+//        let adjustedSize = CGSize(width: containerView.frame.size.width, height: containerView.frame.size.height - longFormYPosition)
+        prevYPos = containerView.frame.size.height - (containerView.frame.size.height * 0.25)
+        anchoredYPosition = prevYPos
+        halfOpen = true
+        presentedView.frame.origin.y = anchoredYPosition
         //presentedViewController.view.frame = CGRect(origin: .zero, size: adjustedSize)
     }
     
@@ -114,6 +121,10 @@ class CustomPresentationController: UIPresentationController {
             
             print(yDisplacement)
             
+            // if yDisplacement is -ve, then switch to full screen
+            
+            // else close bottom sheet
+            
             if presentedView.frame.origin.y < 0 {
                //yDisplacement = yDisplacement
             }
@@ -127,14 +138,50 @@ class CustomPresentationController: UIPresentationController {
 //            if currentY < 50.0 {
 //                return
 //            }
+//            if presentedView.frame.origin.y < 0 {
+//                // going above full screen frame..return
+//                sender.setTranslation(.zero, in: presentedView)
+//                return
+//            }
             
-            if currentY > 600.0 {
-                presentedViewController.dismiss(animated: true, completion: nil)
-            }
+//            if currentY > 600.0 {
+//                presentedViewController.dismiss(animated: true, completion: nil)
+//            }
             
             sender.setTranslation(.zero, in: presentedView)
+            
+            let newYPos = prevYPos + yDisplacement
+            
+            if newYPos < prevYPos {
+                // user is pulling up , switch to full screen
+                print("Switching to full screen")
+                UIView.animate(withDuration: 0.3,
+                               delay: 0.2,
+                               usingSpringWithDamping: 1.0,
+                               initialSpringVelocity: 1.0,
+                               options: .beginFromCurrentState) {
+                    self.halfOpen = false
+                    self.presentedView?.frame.origin.y = 0.0 + 54.0
+                }
+            } else if halfOpen && newYPos > anchoredYPosition {
+                // user is pulling down, close modal controller
+                print("Closing bottom sheet")
+                presentedViewController.dismiss(animated: true, completion: nil)
+            } else if !halfOpen && newYPos > prevYPos {
+                print("Move back to half open position")
+                UIView.animate(withDuration: 0.3,
+                               delay: 0.2,
+                               usingSpringWithDamping: 1.0,
+                               initialSpringVelocity: 1.0,
+                               options: .beginFromCurrentState) {
+                    self.halfOpen = true
+                    self.presentedView?.frame.origin.y = self.anchoredYPosition
+                }
+            } else {
+                
+            }
 ////
-            presentedView.frame.origin.y = currentY + yDisplacement
+           //presentedView.frame.origin.y = currentY + yDisplacement
             
             //sender.setTranslation(.zero, in: presentedView)
             

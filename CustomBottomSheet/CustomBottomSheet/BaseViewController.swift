@@ -40,7 +40,6 @@ class BaseViewController: UIViewController {
             handleBar.widthAnchor.constraint(equalToConstant: 50),
             handleBar.heightAnchor.constraint(equalToConstant: 5)
         ])
-                
     }
     
 }
